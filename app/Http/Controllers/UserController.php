@@ -2,21 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Base64DecoderHelper;
 use App\Jobs\QueueJob;
 use App\Services\DataBaseConnection;
 use App\Services\JwtService;
-use App\Services\Mail\TestMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
-
 class UserController extends Controller
 {
     public function signUp(Request $req)
     {
-
         $conn=new DataBaseConnection();
         $name=$req->name;
         $email=$req->email;
@@ -25,13 +23,7 @@ class UserController extends Controller
         $token =$token = rand(100,1000);
         $fileName=null;
         if(!empty($req->file)){
-            $base64_string =  $req->file;
-            $extension = explode('/', explode(':', substr($base64_string, 0, strpos($base64_string, ';')))[1])[1]; // .jpg .png .pdf
-            $replace = substr($base64_string, 0, strpos($base64_string, ',')+1);
-            $image = str_replace($replace, '', $base64_string);
-            $image = str_replace(' ', '+', $image);
-            $fileName = time().'.'.$extension;
-
+            $file=Base64DecoderHelper::decodeBase64($req->file);
             if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'){
                 $url = "https://";
             }
@@ -39,33 +31,34 @@ class UserController extends Controller
                 $url = "http://";
             }
             $url.= $_SERVER['HTTP_HOST'];
-            $pathD=$url."/api/storage/public/images/".$fileName;
-            $path=storage_path('app\\public\\images').'\\'.$fileName;
-            file_put_contents($path,base64_decode($image));
+            $pathD=$url."/user/storage/public/profilepictures/".$file[0];
+            $path=storage_path('app\\public\\profilepictures').'\\'.$file[0];
+            file_put_contents($path,base64_decode($file[1]));
         }
-
         $conn->get_connection('users')->insertOne([
             'name' => $name,'email' => $email,'password' => $password,'file' => $pathD,'age' => $age,
             'token'=>NULL,'email_token' => $token,'email_verified' => false,'status'=> 0 ,
         ]);
         $this->sendmail($email,$token);
-        return response()->json(["message"=>"plese verify your email to proceed further"]);
+
+        return response()->success();
+
+        //return response()->json(["message"=>"plese verify your email to proceed further"]);
     }
     public function sendmail($mail,$token)
     {
         if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'){
             $url = "https://";
         }
-        else{ 
+        else{
             $url = "http://";
         }
         $url.= $_SERVER['HTTP_HOST'];
         $details=[
             'title' => 'Please Verify Your Email By clicking On Following Link',
-            'body' => 'http://127.0.0.1:8000/user/verify/'.$mail.'/'.$token
+            'body' => $url.'/user/verify/'.$mail.'/'.$token
         ];
        dispatch(new QueueJob($mail,$details));
-        return "Email Sent Succesfully";
     }
 
     public function logIn(Request $req){
@@ -92,12 +85,20 @@ class UserController extends Controller
         $uid=$req->data->_id;
         $conn=new DataBaseConnection();
         $data=[];
-        if($req->file('file') != NULL)
+        if($req->file != NULL)
         {
-            $original_path=$req->file('file')->store('images');
-            dd($original_path);
-            $path=$_SERVER['HTTP_HOST']."/api/storage/".$original_path;
-            $data['file'] =$path;
+            $file=Base64DecoderHelper::decodeBase64($req->file);
+            if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'){
+                $url = "https://";
+            }
+            else{
+                $url = "http://";
+            }
+            $url.= $_SERVER['HTTP_HOST'];
+            $pathD=$url."/user/storage/public/profilepictures/".$file[0];
+            $path=storage_path('app\\public\\profilepictures').'\\'.$file[0];
+            file_put_contents($path,base64_decode($file[1]));
+            $data['file'] =$pathD;
         }
         if($req->name != NULL){$data['name'] = $req->name;}
         if($req->password != NULL){$data['password'] = Hash::make($req->password);}
@@ -105,7 +106,8 @@ class UserController extends Controller
         if($req->email != NULL){$data['email'] = $req->email;}
         if(count($data) != 0) {
             $conn->get_connection('users')->updateOne([ '_id' => $uid ],[ '$set' => $data]);
-            return response()->json(["messsage" => "user data updated successfuly"]);
+            return response()->success();
+
         }
         else{
             return response(["message"=>"No Data To Update"]);
@@ -119,6 +121,20 @@ class UserController extends Controller
             ["_id"=>$uid],
             ['$set'=>['status' => 0 ,'token' => NULL]
         ]);
-        return response(["message" => "logout successfuly"]);
+        return response()->success();
+    }
+
+    public function getProfileData(Request $req) {
+        $data=$req->data->db->get_connection('users')->findOne(['_id'=>$req->data->_id]);
+        return response([$data]);
+    }
+
+    public function hitProfileLink(Request $request, $filename){
+        $headers = ["Cache-Control" => "no-store, no-cache, must-revalidate, max-age=0"];
+        $path = storage_path("app/public/profilepictures".'/'.$filename);
+         if (file_exists($path)) {
+            return response()->download($path, null, $headers, null);
+        }
+        return response()->json(["error"=>"error downloading file"],400);
     }
 }

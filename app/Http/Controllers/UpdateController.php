@@ -22,7 +22,7 @@ class UpdateController extends Controller
             {
                 $conn->get_connection('users')->updateOne(["email"=>$email],
                 ['$set'=>['email_verified' => true]]);
-                return response(['message'=>'Your Email has been Verified']);
+                return response()->success();
             }
         else
             {

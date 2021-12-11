@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\QueueJob;
 use App\Services\Mail\TestMail;
 use App\Services\DataBaseConnection;
 use Illuminate\Http\Request;
@@ -23,9 +24,9 @@ class ForgetPassword extends Controller
             [ 'email'=> $email ],
             [ '$set' => ['email_token'=>$key]]
         );
-        Mail::to($email)->send(new TestMail($details));
-        return response(["message"=>"We have sent an OTP to your registered email Please verify yourself"]);
-    }
+        dispatch(new QueueJob($email,$details));
+        return response()->success();
+        }
 /**
  * function which will get new password and replace it with old one
  */
@@ -38,7 +39,7 @@ class ForgetPassword extends Controller
             [ 'email'=> $email ],
             [ '$set' => ['password' => $pass]]
         );
-        return response(['message' => 'Password changed successfuly']);
-    }
+        return response()->success();
+        }
 }
 

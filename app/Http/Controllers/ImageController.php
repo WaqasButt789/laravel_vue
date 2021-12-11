@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Helpers\Base64DecoderHelper;
 use App\Services\DataBaseConnection;
 use Illuminate\Http\Request;
 
@@ -14,21 +16,14 @@ class ImageController extends Controller
      * one is jwt for
      */
     public function uploadImage(Request $req) {
-        $arr=(array)$req->file;
-       // $img=$arr["\x00Symfony\Component\HttpFoundation\File\UploadedFile\x00originalName"];
-        // $arr=explode('.',$img);
-        // $image_name=$arr[0];
-        // $extension=$arr[1];
-        $image_name="hello";
-        $extension="png";
-        $fileName=null;
-        if(!empty($req->file)){
-            $base64_string =  $req->file;
-            $extension = explode('/', explode(':', substr($base64_string, 0, strpos($base64_string, ';')))[1])[1]; // .jpg .png .pdf
-            $replace = substr($base64_string, 0, strpos($base64_string, ',')+1);
-            $image = str_replace($replace, '', $base64_string);
-            $image = str_replace(' ', '+', $image);
-            $fileName = time().'.'.$extension;
+        // $arr=(array)$req->file;
+        $image=$req->imagename;
+        $arr=explode('.',$image);
+        $image_name=$arr[0];
+        $extension=$arr[1];
+        if($req->filename!=null) {
+            $file_address=$req->filename;
+            $file=Base64DecoderHelper::decodeBase64($file_address);
             if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on'){
                 $url = "https://";
             }
@@ -36,17 +31,13 @@ class ImageController extends Controller
                 $url = "http://";
             }
             $url.= $_SERVER['HTTP_HOST'];
-            $pathD=$url."/api/storage/public/images/".$fileName;
-            $path=storage_path('app\\public\\images').'\\'.$fileName;
-            file_put_contents($path,base64_decode($image));
+            $pathD=$url."/api/storage/public/images/".$file[0];
+            $path=storage_path('app\\public\\images').'\\'.$file[0];
+            file_put_contents($path,base64_decode($file[1]));
         }
-        // $image=$req->file('file')->store('images');
-        // if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')
-        // $url = "https://";
-        // else
-        //     $url = "http://";
-        // $url.= $_SERVER['HTTP_HOST'];
-        // $file=$url."/api/storage/".$image;
+        else {
+            return response(["message"=>"No File Choosen"]);
+        }
         $uid=$req->data->_id;
         $date=date("d/m/Y"); //date pattern date/month/year
         $time= date("h:i:sa");
@@ -60,7 +51,7 @@ class ImageController extends Controller
             "extension"=>$extension,
             "user_id"=>$uid,
     ]);
-        return response(["message"=>"Image Uploaded Successfuly"]);
+         return response()->success();
     }
     /**
      * deleting and unlinking image
@@ -80,12 +71,11 @@ class ImageController extends Controller
         }
         $image_id2=new \MongoDB\BSON\ObjectId($image_id);
         $conn->get_connection('images')->deleteOne(['_id'=>$image_id2]);
-        return response(["message"=>"image deleted"],200);
-    }
-/**
- * searching images against following filters and userid
- * date, time, name, extensions, private, public, hidden
- */
+        return response()->success();    }
+    /**
+     * searching images against following filters and userid
+     * date, time, name, extensions, private, public, hidden
+     */
     public function searchImages(Request $req)
     {
         $conn=new DataBaseConnection();
@@ -137,8 +127,7 @@ class ImageController extends Controller
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $conn->get_connection("images")->updateOne(['_id'=>$image_id,'user_id'=>$uid],
         ['$set'=>["accessor"=> "public"]]);
-        return response(["message"=>"updated successfuly"],200);
-    }
+        return response()->success();    }
 /**
  * making images private and getting three parameters
  * one is jwt token for user id who is making photo private
@@ -151,8 +140,7 @@ class ImageController extends Controller
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $conn->get_connection("images")->updateOne(['_id'=>$image_id,'user_id'=>$uid],
         ['$set'=>["accessor"=> "private","Allowed_Emails" => []]]);
-        return response(["message"=>"updated successfuly"],200);
-    }
+        return response()->success();    }
 /**
  * making images hidden
  * getting wo parameters
@@ -165,8 +153,8 @@ class ImageController extends Controller
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $conn->get_connection("images")->updateOne(['_id'=>$image_id,'user_id'=>$uid],
         ['$set'=>["accessor"=> "hidden"]]);
-        return response(["message"=>"updated successfuly"],200);
-    }
+        return response()->success();
+        }
 
 /**
  * add email in to the allowed email array
@@ -177,6 +165,7 @@ class ImageController extends Controller
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $email=$req->email;
         $conn->get_connection('images')->updateOne(["_id" => $image_id,"accessor"=> "private"],['$push'=>["Allowed_Emails" => $email]]);
+        return response()->success();
     }
 
 /**
@@ -188,6 +177,7 @@ class ImageController extends Controller
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $email=$req->email;
         $conn->get_connection('images')->updateOne(array("user_id"=>$req->data->_id,"_id" => $image_id,"accessor"=>"private"), array('$pull'=>array("Allowed_Emails" => $email)));
+        return response()->success();
     }
 
 /**

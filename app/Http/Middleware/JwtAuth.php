@@ -20,11 +20,7 @@ class JwtAuth
         $conn=new DataBaseConnection();
         // $key=$req->token;
         $key =$req->bearerToken();
-        
         $data=$conn->get_connection('users')->findOne(['token'=>$key]);
-
-
-
         if($data!=NULL){
             $data['db']=$conn;
             return $next($req->merge(["data"=>$data]));
