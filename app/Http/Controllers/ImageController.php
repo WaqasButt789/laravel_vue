@@ -144,7 +144,7 @@ class ImageController extends Controller
         $conn=$req->data->db;
         $uid=$req->data->_id;
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
-        $conn->get_connection("images")->findOne(['_id'=>$image_id,'user_id'=>$uid],
+        $conn->get_connection("images")->updateOne(['_id'=>$image_id,'user_id'=>$uid],
         ['$set'=>["accessor"=> "private","Allowed_Emails" => []]]);
         return response()->success();    }
 /**
