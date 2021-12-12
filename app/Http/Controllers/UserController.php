@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Base64DecoderHelper;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\SignUpRequest;
+use App\Http\Requests\UpdateUseRequest;
 use App\Jobs\QueueJob;
 use App\Services\DataBaseConnection;
 use App\Services\JwtService;
@@ -13,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
-    public function signUp(Request $req)
+    public function signUp(SignUpRequest $req)
     {
         $conn=new DataBaseConnection();
         $name=$req->name;
@@ -61,7 +64,7 @@ class UserController extends Controller
        dispatch(new QueueJob($mail,$details));
     }
 
-    public function logIn(Request $req){
+    public function logIn(LoginRequest $req){
         $conn=new DataBaseConnection();
         $token=new JwtService();
         $jwt=$token->getJwt();
@@ -81,7 +84,7 @@ class UserController extends Controller
         }
     }
 
-    public function updateUser(Request $req) {
+    public function updateUser(UpdateUseRequest $req) {
         $uid=$req->data->_id;
         $conn=new DataBaseConnection();
         $data=[];

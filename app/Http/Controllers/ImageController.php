@@ -3,6 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Base64DecoderHelper;
+use App\Http\Requests\AddEmailRequest;
+use App\Http\Requests\GetLinkRequest;
+use App\Http\Requests\MakeHiddenRequest;
+use App\Http\Requests\MakePrivateRequest;
+use App\Http\Requests\RemoveOneEmailRequest;
+use App\Http\Requests\UploadImageRequest;
 use App\Services\DataBaseConnection;
 use Illuminate\Http\Request;
 
@@ -15,7 +21,7 @@ class ImageController extends Controller
      * uploading image taking two parameters
      * one is jwt for
      */
-    public function uploadImage(Request $req) {
+    public function uploadImage(UploadImageRequest $req) {
         // $arr=(array)$req->file;
         $image=$req->imagename;
         $arr=explode('.',$image);
@@ -134,11 +140,11 @@ class ImageController extends Controller
  * second is email to which you want to see your private photo
  * and third one is image id
  */
-    public function makePrivate(Request $req) {
+    public function makePrivate(MakePrivateRequest $req) {
         $conn=$req->data->db;
         $uid=$req->data->_id;
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
-        $conn->get_connection("images")->updateOne(['_id'=>$image_id,'user_id'=>$uid],
+        $conn->get_connection("images")->findOne(['_id'=>$image_id,'user_id'=>$uid],
         ['$set'=>["accessor"=> "private","Allowed_Emails" => []]]);
         return response()->success();    }
 /**
@@ -147,7 +153,7 @@ class ImageController extends Controller
  * one is jwt token for user id who is going to hide image
  * second one image id
  */
-    public function makeHidden(Request $req) {
+    public function makeHidden(MakeHiddenRequest $req) {
         $conn=$req->data->db;
         $uid=$req->data->_id;
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
@@ -160,7 +166,7 @@ class ImageController extends Controller
  * add email in to the allowed email array
  * it will one email
  */
-    public function addEmail(Request $req){
+    public function addEmail(AddEmailRequest $req){
         $conn=new DataBaseConnection();
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $email=$req->email;
@@ -172,7 +178,7 @@ class ImageController extends Controller
  * remove email from allowed email array
  * it will get one parameter as email
  */
-    public function removeOneEmail(Request $req) {
+    public function removeOneEmail(RemoveOneEmailRequest $req) {
         $conn=new DataBaseConnection();
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
         $email=$req->email;
@@ -185,7 +191,7 @@ class ImageController extends Controller
  * it is getting two parameters one is jwt
  * and one is image id
  */
-    public function getLink(Request $req)
+    public function getLink(GetLinkRequest $req)
     {
         $conn=new DataBaseConnection();
         $image_id=new \MongoDB\BSON\ObjectId($req->image_id);
