@@ -64,3 +64,109 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+### APIS
+
+###	SignUp
+=>	https://imagehosting3.herokuapp.com/user/signup
+##	RequestParameters
+=>	name 
+=>	email
+=>	password
+=>	file
+=>	age
+
+
+###	LogIn
+=>	https://imagehosting3.herokuapp.com/user/login
+##	RequestParameters
+=>	email
+=>	password
+
+###	UpdateUser
+=>	http://imagehosting3.herokuapp.com/user/updateuser
+##	RequestParameters
+=>	name
+=>	token
+=>	file
+
+###	LogOut
+=>	http://imagehosting3.herokuapp.com/user/logout
+
+###	UploadImage
+=>	http://imagehosting3.herokuapp.com/image/uploadimage
+##	RequestParameters
+=>	name
+=>	token
+=>	file
+
+###	DeleteImage
+=>	http://imagehosting3.herokuapp.com/image/deleteimage
+##	RequestParameters
+=>	image_id
+
+
+###	SearchImage
+=>	http://imagehosting3.herokuapp.com/image/searchimage
+##	RequestParameters
+=>	Image_Name
+
+
+
+###	ListImages
+=>	http://imagehosting3.herokuapp.com/image/listimages
+##	RequestParameters
+
+###	MakeImagePublic
+=>	http://imagehosting3.herokuapp.com/image/makepublic
+##	RequestParameters
+=>	image_id
+
+###	MakeImagePrivate
+=>	http://imagehosting3.herokuapp.com/image/makeprivate
+##	RequestParameters
+=>	image_id
+
+###	RemoveSpecificemail
+=>	http://imagehosting3.herokuapp.com/image/removeoneemail
+##	RequestParameters
+=>	image_id
+=>	email
+
+
+###	AddSpecificemail
+=>	http://imagehosting3.herokuapp.com/image/addemail
+##	RequestParameters
+=>	image_id
+=>	email
+
+
+
+###	GenerteLink against image id
+=>	http://imagehosting3.herokuapp.com/image/generatelink
+##	RequestParameters
+
+=>	image_id
+=>	email
+
+###	Forget pssword
+=>	http://imagehosting3.herokuapp.com/ForgetPassword/forgetpassword
+##	RequestParameters
+
+=>	email
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
